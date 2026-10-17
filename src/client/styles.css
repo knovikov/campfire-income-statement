@@ -1,0 +1,383 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #24342e;
+  background: #f3f4f0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #9cc6b7;
+  outline-offset: 3px;
+}
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 34px 24px 56px;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+.wordmark {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+.page-context {
+  color: #6b766e;
+  font-size: 12px;
+}
+.report-card {
+  background: #fff;
+  border: 1px solid #dce1d9;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 18px #20352c05;
+}
+.report-header {
+  padding: 30px 36px 22px;
+}
+.company-name {
+  margin: 0 0 10px;
+  color: #5e6b62;
+  font-size: 13px;
+}
+h1 {
+  margin: 0 0 13px;
+  font-family: Georgia, serif;
+  font-weight: 500;
+  font-size: 34px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+.report-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.report-meta p {
+  margin: 0;
+  font-size: 13px;
+  color: #5e6b62;
+}
+.currency-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: #f0f3ef;
+  border: 1px solid #e0e7de;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.date-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  padding: 18px 36px;
+  background: #fafbf8;
+  border-top: 1px solid #e6e9e2;
+  border-bottom: 1px solid #e6e9e2;
+}
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.date-field label {
+  color: #59665e;
+  font-size: 11px;
+  font-weight: 600;
+}
+.date-field input {
+  min-width: 165px;
+  height: 38px;
+  padding: 7px 10px;
+  border: 1px solid #ccd5cc;
+  border-radius: 4px;
+  background: #fff;
+  color: #24342e;
+  font-size: 13px;
+}
+.date-field input[aria-invalid="true"] {
+  border-color: #b66759;
+}
+.apply-button {
+  border: 1px solid #233d35;
+  border-radius: 4px;
+  background: #233d35;
+  color: white;
+  min-width: 90px;
+  height: 38px;
+  padding: 0 18px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.apply-button:hover:not(:disabled) {
+  background: #345348;
+}
+.report-content {
+  padding: 12px 36px 28px;
+}
+.statement-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.statement-table th {
+  text-align: left;
+}
+.statement-table thead th {
+  color: #7a847c;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 0 10px;
+  border-bottom: 1px solid #e3e8e0;
+}
+.statement-table > thead th:first-child {
+  padding-right: 12px;
+}
+.statement-table .amount {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.section-heading th {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 17px 0 7px;
+}
+.account-row td,
+.account-row th {
+  padding: 5px 0;
+}
+.account-row th {
+  font-weight: 400;
+  color: #4b5850;
+}
+.account-number {
+  color: #8b948b;
+  font-size: 11px;
+  width: 66px;
+}
+.subtotal-row th,
+.subtotal-row td {
+  border-top: 1px solid #e4e8e1;
+  padding: 8px 0;
+  font-weight: 600;
+  font-size: 12px;
+}
+.profit-row th,
+.profit-row td {
+  background: #f2f5f0;
+  border-top: 1px solid #e2e8df;
+  border-bottom: 1px solid #e2e8df;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+.net-income th,
+.net-income td {
+  background: #233d35;
+  border-color: #233d35;
+  color: #fff;
+  font-size: 15px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.status-message,
+.empty-message,
+.error-message,
+.form-error {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.status-message,
+.empty-message {
+  background: #f1f5ef;
+  color: #52614f;
+  padding: 11px 13px;
+  border-radius: 4px;
+}
+.error-message {
+  background: #fcf1ed;
+  color: #8e493b;
+  padding: 12px 14px;
+  border-radius: 4px;
+}
+.form-error {
+  flex-basis: 100%;
+  margin: 0;
+  color: #9b4538;
+}
+.report-footer {
+  border-top: 1px solid #e6e9e2;
+  color: #7b857c;
+  padding: 15px 36px;
+  font-size: 10px;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.account-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.account-toggle:hover {
+  color: #1e674b;
+  text-decoration: underline;
+}
+.expand-icon {
+  font-size: 11px;
+  color: #839384;
+}
+.activity-row > td {
+  padding: 8px 0 14px;
+}
+.activity-panel,
+.activity-status {
+  background: #f7f9f5;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.activity-label {
+  color: #5a6c5d;
+  font-size: 10px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+.activity-scroll {
+  overflow-x: auto;
+}
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.activity-table thead th {
+  padding: 7px 6px;
+  font-size: 9px;
+}
+.activity-table td,
+.activity-table tfoot th {
+  padding: 8px 6px;
+  border-bottom: 1px solid #e3e8df;
+}
+.activity-table .activity-date {
+  white-space: nowrap;
+}
+.activity-table tfoot {
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 20px 12px 30px;
+  }
+  .page-context {
+    display: none;
+  }
+  .page-heading {
+    margin-bottom: 18px;
+  }
+  .report-header {
+    padding: 24px 18px 20px;
+  }
+  h1 {
+    font-size: 29px;
+  }
+  .report-meta p {
+    font-size: 11px;
+  }
+  .date-controls {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+  .date-field {
+    flex: 1;
+    min-width: 125px;
+  }
+  .date-field input {
+    width: 100%;
+    min-width: 0;
+  }
+  .apply-button {
+    width: 100%;
+  }
+  .report-content {
+    padding: 10px 16px 20px;
+  }
+  .statement-table {
+    font-size: 11px;
+  }
+  .statement-table thead th {
+    font-size: 9px;
+  }
+  .account-number {
+    width: 43px;
+    font-size: 10px;
+  }
+  .account-row th {
+    padding-right: 8px;
+  }
+  .section-heading th {
+    font-size: 11px;
+  }
+  .subtotal-row th,
+  .subtotal-row td {
+    font-size: 10px;
+  }
+  .profit-row th,
+  .profit-row td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .net-income th,
+  .net-income td {
+    font-size: 13px;
+  }
+  .report-footer {
+    padding: 14px 18px;
+    line-height: 1.6;
+    font-size: 9px;
+  }
+}
