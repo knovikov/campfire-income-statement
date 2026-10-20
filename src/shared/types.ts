@@ -31,6 +31,16 @@ export interface JournalEntry {
   lines: JournalLine[];
 }
 
+/** An opaque content version prevents stale edits overwriting newer changes. */
+export interface JournalEntryRecord {
+  entry: JournalEntry;
+  version: string;
+}
+
+export interface JournalEntryListResponse {
+  entries: JournalEntry[];
+}
+
 export interface Ledger {
   company: string;
   currency: string;

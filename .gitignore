@@ -5,4 +5,6 @@ coverage/
 .env.local
 .env.*.local
 artifacts/
+data/ledger.local.json
+data/ledger.local.json.*.tmp
 .DS_Store
