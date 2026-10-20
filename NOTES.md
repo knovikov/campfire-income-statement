@@ -22,13 +22,16 @@ operating expenses: 68,100.07; operating income: -44,522.32; other income: 42.18
 
 ## Verification and AI
 
-All 112 unit/HTTP tests pass under UTC, Los Angeles, and Tokyo. They cover explicit
+Timezone checks covered UTC, Los Angeles, and Tokyo. The tests cover explicit
 Q1 expectations, monthly additivity for every account/total, reversals, boundaries,
 deferrals, signed credits, empty periods, malformed data, and large amounts.
+Tests also check unsorted numeric account order and unreadable API responses;
+`npm run test:coverage` includes untested React/startup code in its report.
 Independent Python Decimal sums confirmed the supplied JSON is unchanged, all
 25 entries balance, and monthly totals reconcile. Type checking and build pass.
-Chrome checks verified desktop/mobile, both flags, period isolation, and identical
-browser dates/totals in all three timezones. Loading/errors used delayed/failed requests.
+Earlier Chrome checks covered desktop/mobile, both flags, period isolation, and
+browser dates/totals in all three timezones. This pass checked combined startup,
+shutdown, reports, activity, and an unreadable response after API disconnection.
 
 AI helped write and review code, tests, and documentation. A synthetic test caught
 an actual AI bug: parser-valid `"10.1"` was returned unchanged in activity
@@ -38,8 +41,11 @@ would not expose this contract error.
 ## Scope
 
 The user lifted the original two-hour limit; do not describe this work as completed
-within that limit. Optional drill-down is disabled by default; enable with
-`VITE_ENABLE_ACCOUNT_DRILLDOWN=true`. This exposes UI, not API authorization.
+within that limit. `npm run dev` forces optional drill-down off;
+`npm run dev:extended` forces it on. This exposes UI, not API authorization.
 Activity shares statement signs/filtering and reconciles to every P&L account.
+Journal creation and inline entry editing are additional scope: exact balanced
+whole-entry saves, unique immutable IDs, optimistic versions, and atomic local
+JSON persistence. The supplied fixture remains unchanged; `db:reset` restores it.
 No required functionality is unfinished. Next: period comparisons and CSV export.
 A narrated candidate walkthrough remains to be recorded.
