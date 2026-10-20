@@ -1,51 +1,24 @@
 # Implementation notes
 
-Q1 2026 (2026-01-01 through 2026-03-31) net income: **-44,480.14 USD**.
-Revenue: 37,850.50; COGS: 14,272.75; gross profit: 23,577.75;
-operating expenses: 68,100.07; operating income: -44,522.32; other income: 42.18.
+**Original ledger, Q1 2026 (January 1–March 31): −$44,480.14 net income.**
 
-## Decisions
+$37,850.50 revenue − $14,272.75 COGS − $68,100.07 operating expenses + $42.18 other income = **−$44,480.14**.
+Monthly net income: January **−$21,529.65**; February **−$13,230.25**; March **−$9,720.24**.
 
-- Journal entry dates are timezone-independent accounting calendar dates.
-  Reporting ranges use inclusive YYYY-MM-DD boundaries without timezone conversion.
-- Use exact `bigint` cents and signed, two-decimal JSON strings. Reject amounts
-  requiring rounding; format money in the browser without floating point.
-- Only posted revenue and expense activity contributes. Exclude draft/void
-  entries and balance-sheet accounts. Keep inactive history and zero-balance
-  accounts, sorted by account number.
-- Revenue is credits minus debits; expenses are debits minus credits. Preserve
-  negative contra-revenue and expense credits.
-- Report entries as recorded: subscriptions count only when recognition is
-  posted; all recorded rent is expensed January 1 without amortization.
-- Validate required fields, classifications, references, dates, monetary
-  strings, unique identifiers, and exact journal balance at startup.
+## Rules and edge cases
 
-## Verification and AI
+- **Money:** exact `bigint` cents; decimal-string API/display, parentheses for negatives. Cover integers, one/two decimals, zero/negative/30,000-digit amounts, and huge-value cancellation preserving cents. Reject invalid/overprecision amounts; 64 KB request limit.
+- **Dates:** strict calendar dates/leap years; inclusive and single-day ranges. Missing/impossible/reversed dates fail. No timezone conversion or prior-period P&L carryover.
+- **Signs/classification:** posted only; type controls signs, subtype controls sections. Revenue = credits − debits; expenses = debits − credits. Preserve contra-revenue/negative expenses; exclude balance-sheet lines, including mixed entries.
+- **Recorded timing:** $12,000 subscription billing stays deferred; three $1,000 recognitions earn revenue. Receivable collection adds no revenue. All $9,000 rent stays on January 1. No memo-driven adjustments.
+- **Dataset checks:** marketing $2,500.10; returns −$800.25; software $1,199.97 − $100 = $1,099.97; March’s three-line sale separates $15,000 revenue and −$150 discount.
+- **Inactive accounts:** history survives deactivation; new/backdated inactive postings and draft posting fail entirely, naming the account. No deactivation date inferred.
+- **Integrity:** validate every line: minimum two, one positive side, exact balance, valid references/classifications/dates, unique IDs/accounts. Atomic saves and version checks prevent partial writes/stale edits; rejection preserves stored data.
+- **Reports/drilldowns:** empty periods retain sorted zero accounts. Every contributing posted line reconciles with account totals. Applied dates remain independent of unsaved inputs; edits refresh reports and preserve failed forms. `dev` forces drilldowns off; `dev:extended` forces them on.
 
-Timezone checks covered UTC, Los Angeles, and Tokyo. The tests cover explicit
-Q1 expectations, monthly additivity for every account/total, reversals, boundaries,
-deferrals, signed credits, empty periods, malformed data, and large amounts.
-Tests also check unsorted numeric account order and unreadable API responses;
-`npm run test:coverage` includes untested React/startup code in its report.
-Independent Python Decimal sums confirmed the supplied JSON is unchanged, all
-25 entries balance, and monthly totals reconcile. Type checking and build pass.
-Earlier Chrome checks covered desktop/mobile, both flags, period isolation, and
-browser dates/totals in all three timezones. This pass checked combined startup,
-shutdown, reports, activity, and an unreadable response after API disconnection.
+## Evidence and limits
 
-AI helped write and review code, tests, and documentation. A synthetic test caught
-an actual AI bug: parser-valid `"10.1"` was returned unchanged in activity
-debit/credit fields. It now serializes as `"10.10"`. The original fixture alone
-would not expose this contract error.
-
-## Scope
-
-The user lifted the original two-hour limit; do not describe this work as completed
-within that limit. `npm run dev` forces optional drill-down off;
-`npm run dev:extended` forces it on. This exposes UI, not API authorization.
-Activity shares statement signs/filtering and reconciles to every P&L account.
-Journal creation and inline entry editing are additional scope: exact balanced
-whole-entry saves, unique immutable IDs, optimistic versions, and atomic local
-JSON persistence. The supplied fixture remains unchanged; `db:reset` restores it.
-No required functionality is unfinished. Next: period comparisons and CSV export.
-A narrated candidate walkthrough remains to be recorded.
+- **191 tests passed**, plus TypeScript, build, and source/test formatting. Accounting/date checks passed under UTC, Los Angeles, and Tokyo. Independent Python `Decimal` checks confirmed all 25 entries balance; fixed account/subtotal/month/day oracles supplement reconciliation, reversals, and reorderings.
+- **Manual browser checks:** date labels, mobile layouts, loading/errors/retry, mode isolation, and corrupt-data failure/recovery. Rendered browser flows are not automated. See [test guide](tests/README.md).
+- **Storage:** one API process, local JSON. Invalid/unreadable data returns an actionable 503, blocks writes, and stays untouched; repair then restart. Posted edits lack audit history. Balance sheets, pagination, and immutable corrections remain future work.
+- **AI/scope:** AI assisted implementation/review; totals were independently verified. Tests caught activity output `"10.1"` instead of canonical `"10.10"`. Journal editing/drilldowns extend the original scope; this is not a two-hour implementation.
