@@ -1,3 +1,4 @@
+import { formatCentsAsDecimal, parseMoneyToCents } from "../../shared/money";
 import type {
   Account,
   IncomeStatementResponse,
@@ -7,7 +8,6 @@ import type {
   StatementSection,
 } from "../../shared/types";
 import { validateDateRange } from "./dates";
-import { formatCentsAsDecimal, parseMoneyToCents } from "./money";
 
 type SectionName =
   "revenue" | "cost_of_goods_sold" | "operating_expenses" | "other_income";

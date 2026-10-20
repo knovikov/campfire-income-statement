@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ledger } from "../../src/server/data/ledger";
 import { buildIncomeStatement } from "../../src/server/domain/incomeStatement";
-import { parseMoneyToCents } from "../../src/server/domain/money";
+import { parseMoneyToCents } from "../../src/shared/money";
 import type { IncomeStatementResponse } from "../../src/shared/types";
 import { ledgerWith, saleEntry } from "../fixtures";
 

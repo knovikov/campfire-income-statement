@@ -1,6 +1,6 @@
+import { formatCentsAsDecimal, parseMoneyToCents } from "../../shared/money";
 import type { Account, JournalEntry, JournalLine } from "../../shared/types";
 import { validateAccountingDate } from "./dates";
-import { formatCentsAsDecimal, parseMoneyToCents } from "./money";
 
 export class JournalEntryError extends Error {
   constructor(

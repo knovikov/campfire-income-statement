@@ -49,7 +49,7 @@ function recordFor(entry: JournalEntry): JournalEntryRecord {
 
 /** Serialize complete mutations; publish a new snapshot only after persistence succeeds. */
 export function createMemoryLedgerRepository(
-  source: Ledger,
+  source: unknown,
   persist?: (ledger: Ledger) => Promise<void>,
 ): LedgerRepository {
   validateLedger(source);
@@ -154,26 +154,24 @@ export async function openLedgerRepository(
     }
   }
   try {
-    validateLedger(source);
+    return createMemoryLedgerRepository(source, async (candidate) => {
+      await mkdir(dirname(filePath), { recursive: true });
+      const temporaryPath = `${filePath}.${randomUUID()}.tmp`;
+      try {
+        await writeFile(
+          temporaryPath,
+          `${JSON.stringify(candidate, null, 2)}\n`,
+          { flag: "wx" },
+        );
+        await rename(temporaryPath, filePath);
+      } finally {
+        await unlink(temporaryPath).catch(() => undefined);
+      }
+    });
   } catch (error) {
     if (error instanceof LedgerValidationError) {
       throw new LedgerLoadError(error.message, error);
     }
     throw error;
   }
-
-  return createMemoryLedgerRepository(source, async (candidate) => {
-    await mkdir(dirname(filePath), { recursive: true });
-    const temporaryPath = `${filePath}.${randomUUID()}.tmp`;
-    try {
-      await writeFile(
-        temporaryPath,
-        `${JSON.stringify(candidate, null, 2)}\n`,
-        { flag: "wx" },
-      );
-      await rename(temporaryPath, filePath);
-    } finally {
-      await unlink(temporaryPath).catch(() => undefined);
-    }
-  });
 }

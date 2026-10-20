@@ -1,7 +1,7 @@
 import rawLedger from "../../../data/ledger.json";
+import { parseMoneyToCents } from "../../shared/money";
 import type { Ledger } from "../../shared/types";
 import { validateAccountingDate } from "../domain/dates";
-import { parseMoneyToCents } from "../domain/money";
 
 export class LedgerValidationError extends Error {}
 

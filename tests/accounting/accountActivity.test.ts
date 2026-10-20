@@ -5,7 +5,7 @@ import {
   buildAccountActivity,
 } from "../../src/server/domain/accountActivity";
 import { buildIncomeStatement } from "../../src/server/domain/incomeStatement";
-import { parseMoneyToCents } from "../../src/server/domain/money";
+import { parseMoneyToCents } from "../../src/shared/money";
 import { ledgerWith, saleEntry } from "../fixtures";
 
 function q1Activity(account: string) {
