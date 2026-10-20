@@ -14,7 +14,8 @@ body {
   margin: 0;
 }
 button,
-input {
+input,
+select {
   font: inherit;
 }
 button {
@@ -26,6 +27,10 @@ button:disabled {
 }
 button:focus-visible,
 input:focus-visible {
+  outline: 3px solid #9cc6b7;
+  outline-offset: 3px;
+}
+select:focus-visible {
   outline: 3px solid #9cc6b7;
   outline-offset: 3px;
 }
@@ -48,6 +53,130 @@ input:focus-visible {
 .page-context {
   color: #6b766e;
   font-size: 12px;
+}
+.report-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #d2dbd0;
+  margin-bottom: 20px;
+}
+.report-tabs button {
+  padding: 12px 18px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #617164;
+  font-size: 13px;
+  font-weight: 600;
+}
+.report-tabs button[aria-selected="true"] {
+  border-bottom-color: #233d35;
+  color: #233d35;
+}
+.report-tabs button:disabled {
+  cursor: not-allowed;
+}
+.journal-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 18px 36px;
+  border-top: 1px solid #e6e9e2;
+  border-bottom: 1px solid #e6e9e2;
+  background: #fafbf8;
+}
+.journal-filter-controls .journal-field {
+  flex: 1 1 135px;
+}
+.journal-filter-controls fieldset {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.journal-filter-controls input,
+.journal-filter-controls select {
+  height: 38px;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #ccd5cc;
+  border-radius: 4px;
+  padding: 7px 9px;
+  background: #fff;
+  color: inherit;
+  font-size: 12px;
+}
+.journal-result-count {
+  color: #617164;
+  font-size: 12px;
+  margin: 12px 0;
+}
+.journal-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.journal-list-table th,
+.journal-list-table td {
+  padding: 11px 8px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #e3e8df;
+}
+.journal-list-table th {
+  color: #617164;
+  font-size: 10px;
+  font-weight: 600;
+}
+.journal-list-table tbody > tr > th {
+  color: inherit;
+  font-size: 12px;
+}
+.journal-list-table .amount {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.journal-list-table .entry-date {
+  white-space: nowrap;
+}
+.journal-list-table .journal-actions {
+  margin: 0;
+  gap: 4px;
+}
+.journal-entry-details {
+  background: #f7f9f5;
+  border-radius: 4px;
+  padding: 14px;
+}
+.journal-entry-details .activity-table {
+  font-size: 12px;
+}
+.status-badge {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.status-posted {
+  background: #e8f2e7;
+  color: #345c38;
+}
+.status-draft {
+  background: #fff0ce;
+  color: #7c5a18;
+}
+.status-void {
+  background: #eceeea;
+  color: #687367;
 }
 .report-card {
   background: #fff;
@@ -77,6 +206,140 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+.report-heading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.secondary-button {
+  padding: 9px 12px;
+  border: 1px solid #bccdc1;
+  border-radius: 4px;
+  background: #fff;
+  color: #233d35;
+  font-size: 12px;
+  font-weight: 600;
+}
+.secondary-button:hover:not(:disabled) {
+  background: #eef4ed;
+}
+.link-button {
+  border: 0;
+  padding: 4px 6px;
+  background: transparent;
+  color: #246749;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.link-button:disabled,
+.account-toggle:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+}
+.success-message {
+  padding: 12px 14px;
+  background: #edf5ec;
+  border-radius: 4px;
+  color: #345b39;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.journal-create {
+  padding: 20px 36px 0;
+}
+.journal-editor {
+  border: 1px solid #cfddd0;
+  border-radius: 6px;
+  padding: 18px;
+  background: #fff;
+  color: #24342e;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+}
+.journal-editor h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.journal-editor fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.editor-help {
+  display: block;
+  color: #617164;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.journal-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.journal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.journal-field label {
+  font-weight: 600;
+}
+.journal-memo {
+  grid-column: 1 / -1;
+}
+.journal-editor input,
+.journal-editor select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #bdcdbf;
+  border-radius: 4px;
+  padding: 8px;
+  color: inherit;
+  background: #fff;
+  font-size: 12px;
+}
+.journal-editor input[readonly] {
+  background: #f4f6f2;
+}
+.journal-lines {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+.journal-lines th,
+.journal-lines td {
+  padding: 6px 4px;
+  text-align: left;
+}
+.journal-lines th:first-child {
+  width: 48%;
+}
+.journal-lines input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.journal-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 12px;
+  margin: 12px 0;
+  background: #f2f6ef;
+  font-variant-numeric: tabular-nums;
+}
+.journal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
 }
 .report-meta p {
   margin: 0;
@@ -147,6 +410,9 @@ h1 {
   width: 100%;
   font-size: 13px;
   line-height: 1.45;
+}
+.statement-scroll {
+  overflow-x: auto;
 }
 .statement-table th {
   text-align: left;
@@ -310,6 +576,15 @@ h1 {
 }
 
 @media (max-width: 600px) {
+  .report-tabs button {
+    padding: 11px 12px;
+  }
+  .journal-filter-controls {
+    padding: 16px 18px;
+  }
+  .journal-list-table {
+    min-width: 620px;
+  }
   .page {
     padding: 20px 12px 30px;
   }
@@ -345,6 +620,15 @@ h1 {
   }
   .report-content {
     padding: 10px 16px 20px;
+  }
+  .journal-create {
+    padding: 16px 16px 0;
+  }
+  .journal-editor {
+    padding: 12px;
+  }
+  .journal-fields {
+    grid-template-columns: 1fr;
   }
   .statement-table {
     font-size: 11px;

@@ -3,6 +3,7 @@ import type {
   IncomeStatementResponse,
   StatementAccount,
   StatementSection,
+  JournalEntry,
 } from "../../shared/types";
 import { ENABLE_ACCOUNT_DRILLDOWN } from "../config";
 import { formatMoneyForDisplay } from "../utils/formatMoney";
@@ -14,16 +15,28 @@ interface SectionProps {
   section: StatementSection;
   startDate: string;
   endDate: string;
+  revision: number;
+  onJournalSaved: (entry: JournalEntry) => void;
+  isJournalEditing: boolean;
+  onEditingChange: (editing: boolean) => void;
 }
 
 function AccountRow({
   account,
   startDate,
   endDate,
+  revision,
+  onJournalSaved,
+  isJournalEditing,
+  onEditingChange,
 }: {
   account: StatementAccount;
   startDate: string;
   endDate: string;
+  revision: number;
+  onJournalSaved: (entry: JournalEntry) => void;
+  isJournalEditing: boolean;
+  onEditingChange: (editing: boolean) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const panelId = `activity-${account.account_number}`;
@@ -35,6 +48,7 @@ function AccountRow({
           {ENABLE_ACCOUNT_DRILLDOWN ? (
             <button
               type="button"
+              disabled={isJournalEditing}
               className="account-toggle"
               aria-expanded={isExpanded}
               aria-controls={panelId}
@@ -59,6 +73,10 @@ function AccountRow({
               accountNumber={account.account_number}
               startDate={startDate}
               endDate={endDate}
+              revision={revision}
+              onJournalSaved={onJournalSaved}
+              isJournalEditing={isJournalEditing}
+              onEditingChange={onEditingChange}
             />
           </td>
         </tr>
@@ -73,6 +91,10 @@ function AccountSection({
   section,
   startDate,
   endDate,
+  revision,
+  onJournalSaved,
+  isJournalEditing,
+  onEditingChange,
 }: SectionProps) {
   return (
     <tbody>
@@ -87,6 +109,10 @@ function AccountSection({
           account={account}
           startDate={startDate}
           endDate={endDate}
+          revision={revision}
+          onJournalSaved={onJournalSaved}
+          isJournalEditing={isJournalEditing}
+          onEditingChange={onEditingChange}
         />
       ))}
       <tr className="subtotal-row">
@@ -122,10 +148,25 @@ function ProfitRow({
 
 export function IncomeStatement({
   report,
+  revision,
+  onJournalSaved,
+  isJournalEditing,
+  onEditingChange,
 }: {
   report: IncomeStatementResponse;
+  revision: number;
+  onJournalSaved: (entry: JournalEntry) => void;
+  isJournalEditing: boolean;
+  onEditingChange: (editing: boolean) => void;
 }) {
-  const period = { startDate: report.start_date, endDate: report.end_date };
+  const period = {
+    startDate: report.start_date,
+    endDate: report.end_date,
+    revision,
+    onJournalSaved,
+    isJournalEditing,
+    onEditingChange,
+  };
   const allBalancesAreZero = [
     report.revenue,
     report.cost_of_goods_sold,

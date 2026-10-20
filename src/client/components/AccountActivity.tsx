@@ -1,43 +1,46 @@
-import { useEffect, useState } from "react";
-import type { AccountActivityResponse } from "../../shared/types";
+import { Fragment, useEffect, useState } from "react";
+import type { AccountActivityResponse, JournalEntry } from "../../shared/types";
 import { formatMoneyForDisplay } from "../utils/formatMoney";
+import { requestJson } from "../utils/requestJson";
+import { JournalEntryEditor } from "./JournalEntryEditor";
 
 interface AccountActivityProps {
   accountNumber: string;
   startDate: string;
   endDate: string;
+  revision: number;
+  onJournalSaved: (entry: JournalEntry) => void;
+  isJournalEditing: boolean;
+  onEditingChange: (editing: boolean) => void;
 }
 
 export function AccountActivity({
   accountNumber,
   startDate,
   endDate,
+  revision,
+  onJournalSaved,
+  isJournalEditing,
+  onEditingChange,
 }: AccountActivityProps) {
   const [activity, setActivity] = useState<AccountActivityResponse | null>(
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
     async function loadActivity() {
+      setActivity(null);
+      setError(null);
       const query = new URLSearchParams({ start: startDate, end: endDate });
       try {
-        const response = await fetch(
+        const result = await requestJson<AccountActivityResponse>(
           `/accounts/${encodeURIComponent(accountNumber)}/activity?${query}`,
-          {
-            signal: controller.signal,
-          },
+          controller.signal,
         );
-        const result: AccountActivityResponse | { error: string } =
-          await response.json();
-        if (!response.ok || "error" in result) {
-          throw new Error(
-            "error" in result
-              ? result.error
-              : "Unable to load account activity.",
-          );
-        }
         if (!controller.signal.aborted) {
           setActivity(result);
         }
@@ -53,12 +56,19 @@ export function AccountActivity({
     }
     void loadActivity();
     return () => controller.abort();
-  }, [accountNumber, startDate, endDate]);
+  }, [accountNumber, startDate, endDate, revision, retry]);
 
   if (error) {
     return (
       <p className="activity-status" role="alert">
-        {error} Close and reopen the account to retry.
+        {error}{" "}
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => setRetry((current) => current + 1)}
+        >
+          Retry activity
+        </button>
       </p>
     );
   }
@@ -94,18 +104,54 @@ export function AccountActivity({
                 <th className="amount" scope="col">
                   Impact ({activity.currency})
                 </th>
+                <th scope="col">
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {activity.activity.map((line, index) => (
-                <tr key={`${line.journal_id}/${index}`}>
-                  <td className="activity-date">{line.date}</td>
-                  <td>{line.journal_id}</td>
-                  <td>{line.memo}</td>
-                  <td className="amount">
-                    {formatMoneyForDisplay(line.impact)}
-                  </td>
-                </tr>
+                <Fragment key={`${line.journal_id}/${index}`}>
+                  <tr>
+                    <td className="activity-date">{line.date}</td>
+                    <td>{line.journal_id}</td>
+                    <td>{line.memo}</td>
+                    <td className="amount">
+                      {formatMoneyForDisplay(line.impact)}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="link-button"
+                        disabled={isJournalEditing}
+                        onClick={() => {
+                          setEditingJournalId(`${line.journal_id}/${index}`);
+                          onEditingChange(true);
+                        }}
+                        aria-label={`Edit ${line.journal_id}`}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                  {editingJournalId === `${line.journal_id}/${index}` && (
+                    <tr className="journal-edit-row">
+                      <td colSpan={5}>
+                        <JournalEntryEditor
+                          journalId={line.journal_id}
+                          onCancel={() => {
+                            setEditingJournalId(null);
+                            onEditingChange(false);
+                          }}
+                          onSaved={(entry) => {
+                            setEditingJournalId(null);
+                            onJournalSaved(entry);
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
             <tfoot>
@@ -116,6 +162,7 @@ export function AccountActivity({
                 <td className="amount">
                   {formatMoneyForDisplay(activity.total)}
                 </td>
+                <td />
               </tr>
             </tfoot>
           </table>
