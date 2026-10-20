@@ -3,6 +3,8 @@ import type { Ledger } from "../../shared/types";
 import { validateAccountingDate } from "../domain/dates";
 import { parseMoneyToCents } from "../domain/money";
 
+export class LedgerValidationError extends Error {}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -30,10 +32,14 @@ export function validateLedger(value: unknown): asserts value is Ledger {
     !isNonEmptyString(value.company) ||
     !isNonEmptyString(value.currency)
   ) {
-    throw new Error("Ledger must contain company and currency strings.");
+    throw new LedgerValidationError(
+      "Ledger must contain company and currency strings.",
+    );
   }
   if (!isList(value.accounts) || !isList(value.journal_entries)) {
-    throw new Error("Ledger must contain accounts and journal_entries arrays.");
+    throw new LedgerValidationError(
+      "Ledger must contain accounts and journal_entries arrays.",
+    );
   }
 
   const accountNumbers = new Set<string>();
@@ -43,10 +49,14 @@ export function validateLedger(value: unknown): asserts value is Ledger {
       !isNonEmptyString(account.number) ||
       !isNonEmptyString(account.name)
     ) {
-      throw new Error("Every account requires a number and name.");
+      throw new LedgerValidationError(
+        "Every account requires a number and name.",
+      );
     }
     if (accountNumbers.has(account.number)) {
-      throw new Error(`Duplicate account number ${account.number}.`);
+      throw new LedgerValidationError(
+        `Duplicate account number ${account.number}.`,
+      );
     }
     if (
       typeof account.type !== "string" ||
@@ -55,7 +65,7 @@ export function validateLedger(value: unknown): asserts value is Ledger {
       !allowedSubtypes[account.type].includes(account.subtype) ||
       typeof account.is_active !== "boolean"
     ) {
-      throw new Error(
+      throw new LedgerValidationError(
         `Account ${account.number} has invalid type, subtype, or is_active fields.`,
       );
     }
@@ -65,11 +75,11 @@ export function validateLedger(value: unknown): asserts value is Ledger {
   const entryIds = new Set<string>();
   for (const entry of value.journal_entries) {
     if (!isRecord(entry) || !isNonEmptyString(entry.id)) {
-      throw new Error("Every journal entry requires an id.");
+      throw new LedgerValidationError("Every journal entry requires an id.");
     }
     const entryLabel = `Journal entry ${entry.id}`;
     if (entryIds.has(entry.id)) {
-      throw new Error(`${entryLabel} has a duplicate id.`);
+      throw new LedgerValidationError(`${entryLabel} has a duplicate id.`);
     }
     entryIds.add(entry.id);
     if (
@@ -81,14 +91,14 @@ export function validateLedger(value: unknown): asserts value is Ledger {
       !isList(entry.lines) ||
       entry.lines.length < 2
     ) {
-      throw new Error(
+      throw new LedgerValidationError(
         `${entryLabel} requires a date, memo, valid status, and at least two lines.`,
       );
     }
     try {
       validateAccountingDate(entry.date);
     } catch {
-      throw new Error(
+      throw new LedgerValidationError(
         `${entryLabel} has invalid accounting date ${entry.date}.`,
       );
     }
@@ -102,12 +112,12 @@ export function validateLedger(value: unknown): asserts value is Ledger {
         typeof line.debit !== "string" ||
         typeof line.credit !== "string"
       ) {
-        throw new Error(
+        throw new LedgerValidationError(
           `${entryLabel} contains a line missing account, debit, or credit strings.`,
         );
       }
       if (!accountNumbers.has(line.account)) {
-        throw new Error(
+        throw new LedgerValidationError(
           `${entryLabel} references unknown account ${line.account}.`,
         );
       }
@@ -117,20 +127,25 @@ export function validateLedger(value: unknown): asserts value is Ledger {
         debit = parseMoneyToCents(line.debit);
         credit = parseMoneyToCents(line.credit);
       } catch {
-        throw new Error(
+        throw new LedgerValidationError(
           `${entryLabel}, account ${line.account}, contains an invalid monetary amount.`,
         );
       }
       if (debit < 0n || credit < 0n || (debit !== 0n && credit !== 0n)) {
-        throw new Error(
+        throw new LedgerValidationError(
           `${entryLabel}, account ${line.account}, requires nonnegative, single-sided amounts.`,
+        );
+      }
+      if (debit === 0n && credit === 0n) {
+        throw new LedgerValidationError(
+          `${entryLabel}, account ${line.account}, requires a positive debit or credit.`,
         );
       }
       totalDebits += debit;
       totalCredits += credit;
     }
     if (totalDebits !== totalCredits) {
-      throw new Error(
+      throw new LedgerValidationError(
         `${entryLabel} is unbalanced: debits do not equal credits.`,
       );
     }

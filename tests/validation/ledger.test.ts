@@ -25,6 +25,22 @@ describe("ledger integrity validation", () => {
     expect(() => validateLedger(source)).toThrow(/SALE.*at least two lines/);
   });
 
+  it("balances three-line entries exactly and catches a changed third line", () => {
+    const source = ledgerWith(
+      saleEntry("SPLIT", {
+        lines: [
+          { account: "1000", debit: "0.30", credit: "0" },
+          { account: "4000", debit: "0", credit: "0.1" },
+          { account: "4000", debit: "0", credit: "0.2" },
+        ],
+      }),
+    );
+    expect(() => validateLedger(source)).not.toThrow();
+
+    source.journal_entries[0].lines[2].credit = "0.21";
+    expect(() => validateLedger(source)).toThrow(/SPLIT.*unbalanced/);
+  });
+
   const invalidEntries: [string, object, RegExp][] = [
     [
       "unknown account",
@@ -37,6 +53,11 @@ describe("ledger integrity validation", () => {
       /SALE/,
     ],
     [
+      "numeric amount instead of a decimal string",
+      { lines: [{ ...debit, debit: 10.01 }, credit] },
+      /SALE.*debit.*strings/,
+    ],
+    [
       "one-cent imbalance",
       { lines: [{ ...debit, debit: "10.02" }, credit] },
       /SALE/,
@@ -47,6 +68,7 @@ describe("ledger integrity validation", () => {
       /SALE/,
     ],
     ["impossible date", { date: "2026-02-29" }, /SALE/],
+    ["unknown status", { status: "pending" }, /SALE.*valid status/],
     [
       "negative debit",
       { lines: [{ ...debit, debit: "-10.01" }, credit] },
@@ -56,6 +78,11 @@ describe("ledger integrity validation", () => {
       "both debit and credit",
       { lines: [{ ...debit, credit: "1.00" }, credit] },
       /SALE/,
+    ],
+    [
+      "zero debit and credit",
+      { lines: [{ ...debit, debit: "0.00" }, debit, credit] },
+      /SALE.*1000.*positive/,
     ],
   ];
   it.each(invalidEntries)(
@@ -77,6 +104,20 @@ describe("ledger integrity validation", () => {
       {
         ...ledgerWith(),
         accounts: [{ ...ledger.accounts[0], type: "unknown" }],
+      },
+    ],
+    [
+      "subtype belonging to a different account type",
+      {
+        ...ledgerWith(),
+        accounts: [{ ...ledger.accounts[0], subtype: "operating_revenue" }],
+      },
+    ],
+    [
+      "nonboolean account activity status",
+      {
+        ...ledgerWith(),
+        accounts: [{ ...ledger.accounts[0], is_active: "true" }],
       },
     ],
     [
