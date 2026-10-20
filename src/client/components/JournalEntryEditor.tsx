@@ -14,11 +14,12 @@ import { requestJson } from "../utils/requestJson";
 
 interface JournalEntryEditorProps {
   journalId?: string;
-  initialDate?: string;
-  initialAccount?: string;
   onSaved: (entry: JournalEntry) => void;
   onCancel: () => void;
 }
+
+type DraftLine = JournalLine & { key: number };
+type DraftEntry = Omit<JournalEntry, "lines"> & { lines: DraftLine[] };
 
 const accountGroups: { type: AccountType; label: string }[] = [
   { type: "asset", label: "Assets" },
@@ -28,8 +29,8 @@ const accountGroups: { type: AccountType; label: string }[] = [
   { type: "expense", label: "Expenses" },
 ];
 
-function emptyLine(account = ""): JournalLine {
-  return { account, debit: "", credit: "" };
+function emptyLine(key: number): DraftLine {
+  return { key, account: "", debit: "", credit: "" };
 }
 
 function localToday(): string {
@@ -39,24 +40,21 @@ function localToday(): string {
 
 export function JournalEntryEditor({
   journalId,
-  initialDate,
-  initialAccount,
   onSaved,
   onCancel,
 }: JournalEntryEditorProps) {
   const formId = useId();
   const titleRef = useRef<HTMLHeadingElement>(null);
   const nextLineKey = useRef(2);
-  const [lineKeys, setLineKeys] = useState([0, 1]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [originalAccounts, setOriginalAccounts] = useState<string[]>([]);
-  const [entry, setEntry] = useState<JournalEntry>({
+  const [entry, setEntry] = useState<DraftEntry>(() => ({
     id: "",
-    date: initialDate || localToday(),
+    date: localToday(),
     memo: "",
     status: "posted",
-    lines: [emptyLine(initialAccount), emptyLine()],
-  });
+    lines: [emptyLine(0), emptyLine(1)],
+  }));
   const [version, setVersion] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -83,10 +81,12 @@ export function JournalEntryEditor({
         if (controller.signal.aborted) return;
         setAccounts(accountResult.accounts);
         if (record) {
-          setEntry(record.entry);
+          setEntry({
+            ...record.entry,
+            lines: record.entry.lines.map((line, key) => ({ ...line, key })),
+          });
           setVersion(record.version);
           setOriginalAccounts(record.entry.lines.map((line) => line.account));
-          setLineKeys(record.entry.lines.map((_, index) => index));
           nextLineKey.current = record.entry.lines.length;
         }
       } catch (error: unknown) {
@@ -119,18 +119,14 @@ export function JournalEntryEditor({
   }
 
   function addLine() {
-    const key = nextLineKey.current++;
-    setLineKeys((current) => [...current, key]);
+    const line = emptyLine(nextLineKey.current++);
     setEntry((current) => ({
       ...current,
-      lines: [...current.lines, emptyLine()],
+      lines: [...current.lines, line],
     }));
   }
 
   function removeLine(index: number) {
-    setLineKeys((current) =>
-      current.filter((_, lineIndex) => lineIndex !== index),
-    );
     setEntry((current) => ({
       ...current,
       lines: current.lines.filter((_, lineIndex) => lineIndex !== index),
@@ -303,16 +299,16 @@ export function JournalEntryEditor({
                 </thead>
                 <tbody>
                   {entry.lines.map((line, index) => (
-                    <tr key={lineKeys[index]}>
+                    <tr key={line.key}>
                       <td>
                         <label
                           className="visually-hidden"
-                          htmlFor={`${formId}-account-${lineKeys[index]}`}
+                          htmlFor={`${formId}-account-${line.key}`}
                         >
                           Line {index + 1} account
                         </label>
                         <select
-                          id={`${formId}-account-${lineKeys[index]}`}
+                          id={`${formId}-account-${line.key}`}
                           value={line.account}
                           required
                           onChange={(event) =>
@@ -350,12 +346,12 @@ export function JournalEntryEditor({
                         <td key={side}>
                           <label
                             className="visually-hidden"
-                            htmlFor={`${formId}-${side}-${lineKeys[index]}`}
+                            htmlFor={`${formId}-${side}-${line.key}`}
                           >
                             Line {index + 1} {side}
                           </label>
                           <input
-                            id={`${formId}-${side}-${lineKeys[index]}`}
+                            id={`${formId}-${side}-${line.key}`}
                             type="text"
                             inputMode="decimal"
                             placeholder="0.00"

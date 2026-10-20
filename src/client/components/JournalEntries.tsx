@@ -27,6 +27,8 @@ interface JournalFilters {
 
 const emptyFilters: JournalFilters = { q: "", start: "", end: "", status: "" };
 
+type EditorTarget = { mode: "create" } | { mode: "edit"; id: string };
+
 function totalFor(entry: JournalEntry, side: "debit" | "credit"): string {
   return formatMoneyForDisplay(
     formatCentsAsDecimal(
@@ -120,10 +122,9 @@ export function JournalEntries({
   const [formError, setFormError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
-  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
-  const [addingEntry, setAddingEntry] = useState(false);
+  const [editorTarget, setEditorTarget] = useState<EditorTarget | null>(null);
   const [savedEntry, setSavedEntry] = useState<JournalEntry | null>(null);
-  const editing = addingEntry || editingEntryId !== null;
+  const editing = editorTarget !== null;
 
   useEffect(() => {
     if (!active) return;
@@ -175,8 +176,7 @@ export function JournalEntries({
   }
 
   function cancelEditing() {
-    setAddingEntry(false);
-    setEditingEntryId(null);
+    setEditorTarget(null);
     onEditingChange(false);
   }
 
@@ -205,7 +205,7 @@ export function JournalEntries({
             className="secondary-button"
             disabled={editing || loading}
             onClick={() => {
-              setAddingEntry(true);
+              setEditorTarget({ mode: "create" });
               onEditingChange(true);
             }}
           >
@@ -306,7 +306,7 @@ export function JournalEntries({
         )}
       </form>
 
-      {addingEntry && (
+      {editorTarget?.mode === "create" && (
         <div className="journal-create">
           <JournalEntryEditor onCancel={cancelEditing} onSaved={saved} />
         </div>
@@ -412,7 +412,7 @@ export function JournalEntries({
                               disabled={editing}
                               aria-label={`Edit ${entry.id}`}
                               onClick={() => {
-                                setEditingEntryId(entry.id);
+                                setEditorTarget({ mode: "edit", id: entry.id });
                                 onEditingChange(true);
                               }}
                             >
@@ -430,17 +430,18 @@ export function JournalEntries({
                             </td>
                           </tr>
                         )}
-                        {editingEntryId === entry.id && (
-                          <tr className="journal-edit-row">
-                            <td colSpan={7}>
-                              <JournalEntryEditor
-                                journalId={entry.id}
-                                onCancel={cancelEditing}
-                                onSaved={saved}
-                              />
-                            </td>
-                          </tr>
-                        )}
+                        {editorTarget?.mode === "edit" &&
+                          editorTarget.id === entry.id && (
+                            <tr className="journal-edit-row">
+                              <td colSpan={7}>
+                                <JournalEntryEditor
+                                  journalId={entry.id}
+                                  onCancel={cancelEditing}
+                                  onSaved={saved}
+                                />
+                              </td>
+                            </tr>
+                          )}
                       </Fragment>
                     ))}
                   </tbody>
