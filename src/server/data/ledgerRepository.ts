@@ -11,7 +11,21 @@ import {
   JournalEntryError,
   normalizeJournalEntry,
 } from "../domain/journalEntries";
-import { ledger as seedLedger, validateLedger } from "./ledger";
+import {
+  ledger as seedLedger,
+  LedgerValidationError,
+  validateLedger,
+} from "./ledger";
+
+/** A known storage failure with a safe, actionable message for API clients. */
+export class LedgerLoadError extends Error {
+  constructor(detail: string, cause: unknown) {
+    super(
+      `Failed to load ledger data: ${detail} Check the stored ledger and restart the API.`,
+      { cause },
+    );
+  }
+}
 
 export interface LedgerRepository {
   snapshot(): Ledger;
@@ -131,12 +145,22 @@ export async function openLedgerRepository(
   try {
     source = JSON.parse(await readFile(filePath, "utf8"));
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error;
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      source = seedLedger;
+    } else if (error instanceof SyntaxError) {
+      throw new LedgerLoadError("the stored file is not valid JSON.", error);
+    } else {
+      throw new LedgerLoadError("the stored file could not be read.", error);
     }
-    source = seedLedger;
   }
-  validateLedger(source);
+  try {
+    validateLedger(source);
+  } catch (error) {
+    if (error instanceof LedgerValidationError) {
+      throw new LedgerLoadError(error.message, error);
+    }
+    throw error;
+  }
 
   return createMemoryLedgerRepository(source, async (candidate) => {
     await mkdir(dirname(filePath), { recursive: true });

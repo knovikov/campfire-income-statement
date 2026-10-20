@@ -7,13 +7,17 @@ import { AccountNotFoundError } from "./domain/accountActivity";
 import { createReportRouter } from "./routes/reports";
 import { createJournalRouter } from "./routes/journalEntries";
 import { JournalEntryError } from "./domain/journalEntries";
-import { createMemoryLedgerRepository } from "./data/ledgerRepository";
+import {
+  createMemoryLedgerRepository,
+  LedgerLoadError,
+  openLedgerRepository,
+} from "./data/ledgerRepository";
 import type { LedgerRepository } from "./data/ledgerRepository";
 
 /** Create the HTTP app without opening a port, so requests can be tested in isolation. */
-export function createApp(source: Ledger | LedgerRepository = ledger) {
-  const repository =
-    "snapshot" in source ? source : createMemoryLedgerRepository(source);
+export function createApp(
+  source: Ledger | LedgerRepository | LedgerLoadError = ledger,
+) {
   const app = express();
   app.disable("x-powered-by");
   // Register before the routes so every completed response, including errors, is logged.
@@ -27,9 +31,16 @@ export function createApp(source: Ledger | LedgerRepository = ledger) {
     });
     next();
   });
-  app.use(express.json({ limit: "64kb" }));
-  app.use(createJournalRouter(repository));
-  app.use(createReportRouter(repository));
+  if (source instanceof LedgerLoadError) {
+    // Keep the API available to explain the data failure instead of a proxy error.
+    app.use((_request, _response, next) => next(source));
+  } else {
+    const repository =
+      "snapshot" in source ? source : createMemoryLedgerRepository(source);
+    app.use(express.json({ limit: "64kb" }));
+    app.use(createJournalRouter(repository));
+    app.use(createReportRouter(repository));
+  }
   app.use((_request, response) => {
     response.status(404).json({ error: "Route not found." });
   });
@@ -40,6 +51,10 @@ export function createApp(source: Ledger | LedgerRepository = ledger) {
       response: Response,
       _next: NextFunction,
     ) => {
+      if (error instanceof LedgerLoadError) {
+        response.status(503).json({ error: error.message });
+        return;
+      }
       if (error instanceof JournalEntryError) {
         response.status(error.status).json({ error: error.message });
         return;
@@ -74,4 +89,15 @@ export function createApp(source: Ledger | LedgerRepository = ledger) {
     },
   );
   return app;
+}
+
+/** Start in a readable failure state when stored data cannot safely be loaded. */
+export async function createAppFromLedgerFile(filePath: string) {
+  try {
+    return createApp(await openLedgerRepository(filePath));
+  } catch (error) {
+    if (!(error instanceof LedgerLoadError)) throw error;
+    console.error("Unable to load stored ledger:", error);
+    return createApp(error);
+  }
 }
