@@ -3,7 +3,7 @@ import {
   DateValidationError,
   validateAccountingDate,
   validateDateRange,
-} from "../src/server/domain/dates";
+} from "../../src/server/domain/dates";
 
 describe("accounting calendar dates", () => {
   it.each([
