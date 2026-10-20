@@ -163,6 +163,21 @@ describe("account activity", () => {
     expect(deferred.total).toBe("12000.00");
   });
 
+  it("shows a posted equity credit as a positive normal balance", () => {
+    const source = ledgerWith(
+      saleEntry("capital", {
+        lines: [
+          { account: "1000", debit: "10.01", credit: "0.00" },
+          { account: "3000", debit: "0.00", credit: "10.01" },
+        ],
+      }),
+    );
+
+    expect(
+      buildAccountActivity(source, "3000", "2026-03-31", "2026-03-31").total,
+    ).toBe("10.01");
+  });
+
   it("rejects an unknown account instead of inventing activity", () => {
     expect(() => q1Activity("9999")).toThrow(AccountNotFoundError);
   });

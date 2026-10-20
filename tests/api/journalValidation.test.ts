@@ -94,13 +94,9 @@ describe("inactive account history", () => {
     ],
   });
 
-  it("allows existing inactive lines to remain but rejects new postings", async () => {
+  it("allows a memo edit to retain unchanged historical inactive lines", async () => {
     const repository = createMemoryLedgerRepository(ledgerWith(historical));
     const app = createApp(repository);
-    await request(app)
-      .post("/journal-entries")
-      .send({ ...historical, id: "NEW" })
-      .expect(400);
     const original = repository.getEntry("LEGACY");
     const response = await request(app)
       .put("/journal-entries/LEGACY")
@@ -112,12 +108,8 @@ describe("inactive account history", () => {
     expect(response.body.entry).toEqual({ ...historical, memo: "Clarified" });
   });
 
-  it("rejects changed inactive amounts and transitioning inactive drafts to posted", async () => {
-    const source = ledgerWith(historical, {
-      ...historical,
-      id: "DRAFT",
-      status: "draft",
-    });
+  it("rejects changes to historical inactive amounts", async () => {
+    const source = ledgerWith(historical);
     const repository = createMemoryLedgerRepository(source);
     const app = createApp(repository);
     const original = repository.getEntry("LEGACY");
@@ -132,14 +124,39 @@ describe("inactive account history", () => {
       .put("/journal-entries/LEGACY")
       .send({ entry: changed, version: original.version })
       .expect(400);
-    const draft = repository.getEntry("DRAFT");
-    await request(app)
-      .put("/journal-entries/DRAFT")
+    expect(repository.snapshot()).toEqual(source);
+  });
+
+  it("rejects the whole backdated create or edit when its last line uses inactive Marketing", async () => {
+    const source = ledgerWith(saleEntry("ACTIVE-SALE"));
+    const persist = vi.fn(async () => {});
+    const repository = createMemoryLedgerRepository(source, persist);
+    const app = createApp(repository);
+    const original = repository.getEntry("ACTIVE-SALE");
+    const input = saleEntry("BACKDATED", {
+      date: "2025-01-01",
+      lines: [
+        { account: "1000", debit: "10.00", credit: "0.00" },
+        { account: "4000", debit: "0.00", credit: "15.00" },
+        { account: "6300", debit: "5.00", credit: "0.00" },
+      ],
+    });
+    const created = await request(app)
+      .post("/journal-entries")
+      .send(input)
+      .expect(400);
+    const edited = await request(app)
+      .put("/journal-entries/ACTIVE-SALE")
       .send({
-        entry: { ...draft.entry, status: "posted" },
-        version: draft.version,
+        entry: { ...input, id: original.entry.id },
+        version: original.version,
       })
       .expect(400);
+
+    expect(created.body.error).toContain("inactive account 6300");
+    expect(edited.body.error).toContain("inactive account 6300");
     expect(repository.snapshot()).toEqual(source);
+    expect(repository.getEntry(original.entry.id)).toEqual(original);
+    expect(persist).not.toHaveBeenCalled();
   });
 });

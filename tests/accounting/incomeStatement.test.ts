@@ -125,6 +125,40 @@ describe("income statement from the supplied ledger", () => {
 });
 
 describe("income statement accounting rules", () => {
+  it("uses account type and subtype even when numbers and names carry no classification", () => {
+    const source = ledgerWith(
+      saleEntry("mixed-activity", {
+        lines: [
+          { account: "1000", debit: "45.00", credit: "0.00" },
+          { account: "4000", debit: "0.00", credit: "100.00" },
+          { account: "4900", debit: "10.00", credit: "0.00" },
+          { account: "5000", debit: "20.00", credit: "0.00" },
+          { account: "6000", debit: "30.00", credit: "0.00" },
+          { account: "7000", debit: "0.00", credit: "5.00" },
+        ],
+      }),
+    );
+    source.accounts = source.accounts.map((account) => ({
+      ...account,
+      number: `custom-${account.number}`,
+      name: "Same display name",
+    }));
+    for (const line of source.journal_entries[0].lines)
+      line.account = `custom-${line.account}`;
+
+    const report = buildIncomeStatement(source, "2026-03-31", "2026-03-31");
+
+    expect(statementValues(report)).toMatchObject({
+      revenue: "90.00",
+      cost_of_goods_sold: "20.00",
+      gross_profit: "70.00",
+      operating_expenses: "30.00",
+      operating_income: "40.00",
+      other_income: "5.00",
+      net_income: "45.00",
+    });
+  });
+
   it("sorts account numbers numerically without changing the source order", () => {
     const source = ledgerWith();
     source.accounts = ["10", "4000", "2"].map((number) => ({
